@@ -14,19 +14,18 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> {
   var _isLoading = false;
   @override
-  void initState() {
-    // TODO: implement initState
-    Future.delayed(Duration.zero).then((_) async {
-      setState(() {
-        _isLoading = true;
-      });
-      await Provider.of<Orders>(context, listen: false).getOrders();
-      setState(() {
-        _isLoading = false;
-      });
-    });
-    super.initState();
-  }
+  // void initState() {
+  //   // TODO: implement initState
+  //   // Future.delayed(Duration.zero).then((_) async {
+  //   // _isLoading = true;
+  //   // Provider.of<Orders>(context, listen: false).getOrders().then((_) {
+  //   //   setState(() {
+  //   //     _isLoading = false;
+  //   //   });
+  //   // });
+  //   // });
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +35,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
         title: Text('Your Orders'),
       ),
       drawer: AppDrawer(),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemBuilder: (ctx, i) => OrderItem(
-                    orderData.orders[i],
-                  ),
-              itemCount: orderData.orders.length),
+      body: FutureBuilder(
+        future: Provider.of<Orders>(context, listen: false).getOrders(),
+        builder: (ctx, dataSnapshot) {
+          if (dataSnapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else {
+            if (dataSnapshot.error != null) {
+              return Center(
+                child: Text('An error occured'),
+              );
+            } else {
+              return Consumer(
+                builder: (ctx, orderData, child) => ListView.builder(
+                    itemBuilder: (ctx, i) => OrderItem(
+                          orderData.orders[i],
+                        ),
+                    itemCount: orderData.orders.length),
+              );
+            }
+          }
+        },
+      ),
     );
   }
 }
